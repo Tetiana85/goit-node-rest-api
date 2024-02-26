@@ -45,7 +45,7 @@ export async function updateContactById(contactId, data) {
   const index = contacts.findIndex((el) => el.id === contactId);
   if (index === -1) return null;
 
-  contacts[index] = Object.assign(contacts[index], data);
+  contacts[index] = { id, ...data };
 
   await fs.writeFile(contactsPath, JSON.stringify(contacts, null, 2));
 
