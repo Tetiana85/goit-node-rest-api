@@ -6,4 +6,5 @@ export const ctrlWrapper = (crtl) => {
       next(error);
     }
   };
+  return func;
 };

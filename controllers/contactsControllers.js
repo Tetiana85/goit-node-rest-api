@@ -10,21 +10,21 @@ import HttpError from "../helpers/HttpError.js";
 
 import { ctrlWrapper } from "../helpers/ctrlWrapper.js";
 
-export const getAllContacts = async (req, res) => {
+const getAllContacts = async (req, res) => {
   const result = await listContacts();
   res.json(result);
 };
 
-export const getOneContact = async (req, res) => {
+const getOneContact = async (req, res) => {
   const { id } = req.params;
   const result = await getContactById(id);
   if (!result) {
-    throw HttpError(404);
+    throw HttpError(404, "Not found");
   }
   res.json(result);
 };
 
-export const deleteContact = async (req, res) => {
+const deleteContact = async (req, res) => {
   const { id } = req.params;
   const result = await removeContact(id);
   if (!result) {
@@ -32,17 +32,24 @@ export const deleteContact = async (req, res) => {
   }
   res.json({
     message: "Delete success",
+    result,
   });
 };
 
-export const createContact = async (req, res) => {
+const createContact = async (req, res) => {
   const result = await addContact(req.body);
   res.status(201).json(result);
 };
 
-export const updateContact = async (req, res) => {
+const updateContact = async (req, res) => {
   const { id } = req.params;
-  const result = await updateContactById(id, req.body);
+  const { body } = req;
+
+  if (Object.keys(body).length === 0) {
+    throw HttpError(400, "Body must have at least one field");
+  }
+
+  const result = await updateContactById(id, body);
   if (!result) {
     throw HttpError(404);
   }
