@@ -30,10 +30,7 @@ const deleteContact = async (req, res) => {
   if (!result) {
     throw HttpError(404);
   }
-  res.json({
-    message: "Delete success",
-    result,
-  });
+  res.json(result);
 };
 
 const createContact = async (req, res) => {
