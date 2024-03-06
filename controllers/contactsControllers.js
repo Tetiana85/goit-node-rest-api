@@ -5,7 +5,18 @@ import HttpError from "../helpers/HttpError.js";
 import { ctrlWrapper } from "../helpers/ctrlWrapper.js";
 
 export const getAllContacts = async (req, res) => {
-  const result = await Contact.find();
+  const { _id: owner } = req.user;
+  const { page = 1, limit = 20, favorite } = req.query;
+  const skip = (page - 1) * limit;
+
+  if (favorite) {
+    query.favorite = favorite === "true";
+  }
+
+  const result = await Contact.find({ owner }, "-createdAt -updatedAt", {
+    skip,
+    limit,
+  });
   res.json(result);
 };
 
@@ -24,13 +35,12 @@ export const deleteContact = async (req, res) => {
   if (!result) {
     throw HttpError(404);
   }
-  res.json({
-    message: "Delete success",
-  });
+  res.json(result);
 };
 
 export const createContact = async (req, res) => {
-  const result = await Contact.create(req.body);
+  const { _id: owner } = req.user;
+  const result = await Contact.create({ ...req.body, owner });
   res.status(201).json(result);
 };
 
