@@ -9,11 +9,13 @@ export const getAllContacts = async (req, res) => {
   const { page = 1, limit = 20, favorite } = req.query;
   const skip = (page - 1) * limit;
 
+  const query = { owner };
+
   if (favorite) {
     query.favorite = favorite === "true";
   }
 
-  const result = await Contact.find({ owner }, "-createdAt -updatedAt", {
+  const result = await Contact.find(query, "-createdAt -updatedAt", {
     skip,
     limit,
   });
@@ -22,7 +24,7 @@ export const getAllContacts = async (req, res) => {
 
 export const getOneContact = async (req, res) => {
   const { id } = req.params;
-  const result = await Contact.findById(id);
+  const result = await Contact.findOne({ _id: id, owner: req.user._id });
   if (!result) {
     throw HttpError(404, "Not found");
   }
@@ -31,7 +33,10 @@ export const getOneContact = async (req, res) => {
 
 export const deleteContact = async (req, res) => {
   const { id } = req.params;
-  const result = await Contact.findByIdAndDelete(id);
+  const result = await Contact.findOneAndDelete({
+    _id: id,
+    owner: req.user._id,
+  });
   if (!result) {
     throw HttpError(404);
   }
@@ -52,7 +57,11 @@ export const updateContact = async (req, res) => {
     throw HttpError(400, "Body must have at least one field");
   }
 
-  const result = await Contact.findByIdAndUpdate(id, req.body, { new: true });
+  const result = await Contact.findOneAndUpdate(
+    { _id: id, owner: req.user._id },
+    req.body,
+    { new: true }
+  );
   if (!result) {
     throw HttpError(404);
   }
@@ -62,18 +71,24 @@ export const updateContact = async (req, res) => {
 export const updateStatusContact = async (req, res) => {
   const { id } = req.params;
   const { favorite } = req.body;
+  const { _id: owner } = req.user;
 
   const contact = await Contact.findById(id);
   if (!contact) {
-    throw HttpError(404, "Not found");
+    throw HttpError(404, "Contact not found");
   }
 
-  const result = await Contact.findByIdAndUpdate(
-    id,
+  if (contact.owner.toString() !== owner) {
+    throw HttpError(403);
+  }
+
+  const updatedContact = await Contact.findOneAndUpdate(
+    { _id: id, owner },
     { favorite },
     { new: true }
   );
-  res.json(result);
+
+  res.json(updatedContact);
 };
 
 const controllers = {
