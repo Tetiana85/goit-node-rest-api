@@ -4,9 +4,14 @@ import User from "../models/users.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import dotevn from "dotenv";
+import gravatar from "gravatar";
+import path from "path";
+import fs from "fs/promises";
+import Jimp from "jimp";
 
 dotevn.config();
 const { SECRET_KEY } = process.env;
+const avatarsDir = path.resolve("public", "avatars");
 
 const register = async (req, res) => {
   const { email, password } = req.body;
@@ -17,11 +22,18 @@ const register = async (req, res) => {
     throw HttpError(409, "Email in use");
   }
   const hashPassword = await bcrypt.hash(password, 10);
-  const newUser = await User.create({ ...req.body, password: hashPassword });
+  const avatarURL = gravatar.url(email);
+
+  const newUser = await User.create({
+    ...req.body,
+    password: hashPassword,
+    avatarURL,
+  });
   res.status(201).json({
     user: {
       email: newUser.email,
       subscription: newUser.subscription,
+      avatarURL: newUser.avatarURL,
     },
   });
 };
@@ -83,12 +95,33 @@ const subscription = async (req, res) => {
   });
 };
 
+const updateAvatar = async (req, res) => {
+  const { _id } = req.user;
+  const { path: tempUpload, originalname } = req.file;
+  const filename = `${_id}_${originalname}`;
+  const resultUpload = path.resolve(avatarsDir, filename);
+
+  const normalAvatar = await Jimp.read(tempUpload);
+  normalAvatar.resize(250, 250).write(tempUpload);
+
+  // await fs.rename(tempUpload, resultUpload);
+
+  await fs.copyFile(tempUpload, resultUpload);
+  await fs.unlink(tempUpload);
+  const avatarURL = path.join("avatars", filename);
+
+  await User.findByIdAndUpdate(_id, { avatarURL });
+
+  res.json({ avatarURL });
+};
+
 const controllers = {
   register: ctrlWrapper(register),
   login: ctrlWrapper(login),
   current: ctrlWrapper(current),
   logout: ctrlWrapper(logout),
   subscription: ctrlWrapper(subscription),
+  updateAvatar: ctrlWrapper(updateAvatar),
 };
 
 export default controllers;
