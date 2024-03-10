@@ -85,6 +85,7 @@ describe("login controller", () => {
     User.findOne.mockResolvedValue({
       _id: "1",
       email: req.body.email,
+      password: "password123",
       password: "$2b$10$7EvDt53YfRivDgE4ev0Beu6xOZpk/0wQTVIFQDQvuO5h0t6I7Ureu", // bcrypt hash for 'password123'
       subscription: "starter",
     });
