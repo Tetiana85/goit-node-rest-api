@@ -6,15 +6,26 @@ import validateBody from "../helpers/validateBody.js";
 import { upload } from "../middlewares/upload.js";
 
 import {
+  emailSchema,
   loginSchema,
   registerSchema,
   subscriptionShema,
 } from "../models/users.js";
 
 const authRouter = express.Router();
-const { register, login, current, logout, subscription, updateAvatar } =
-  authControllers;
+const {
+  register,
+  login,
+  current,
+  logout,
+  subscription,
+  updateAvatar,
+  verifyEmail,
+  resendVerifyEmail,
+} = authControllers;
 
+authRouter.get("/verify/:verificationToken", verifyEmail);
+authRouter.post("/verify", validateBody(emailSchema), resendVerifyEmail);
 authRouter.post("/register", validateBody(registerSchema), register);
 authRouter.post("/login", validateBody(loginSchema), login);
 authRouter.post("/logout", authenticate, logout);
