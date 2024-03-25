@@ -159,10 +159,10 @@ const updateAvatar = async (req, res) => {
   const normalAvatar = await Jimp.read(tempUpload);
   normalAvatar.resize(250, 250).write(tempUpload);
 
-  // await fs.rename(tempUpload, resultUpload);
+  await fs.rename(tempUpload, resultUpload);
 
-  await fs.copyFile(tempUpload, resultUpload);
-  await fs.unlink(tempUpload);
+  // await fs.copyFile(tempUpload, resultUpload);
+  // await fs.unlink(tempUpload);
   const avatarURL = path.join("avatars", filename);
 
   await User.findByIdAndUpdate(_id, { avatarURL });
